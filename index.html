@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SPORTS.TV — Live & Highlights</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --red: #E8001C;
+    --yellow: #FFD100;
+    --dark: #0A0A0C;
+    --darker: #060608;
+    --mid: #141418;
+    --border: #1E1E24;
+    --text: #F0F0F5;
+    --muted: #60606A;
+    --card: #111115;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--darker);
+    color: var(--text);
+    font-family: 'Barlow', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ─── NOISE OVERLAY ─── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.4;
+  }
+
+  /* ─── HEADER ─── */
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(6,6,8,0.92);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2rem;
+    letter-spacing: 0.08em;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .logo span {
+    color: var(--red);
+  }
+  .logo-dot {
+    width: 8px;
+    height: 8px;
+    background: var(--red);
+    border-radius: 50%;
+    animation: pulse 1.8s infinite;
+  }
+  @keyframes pulse {
+    0%,100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.7); }
+  }
+
+  .nav-cats {
+    display: flex;
+    gap: 0.25rem;
+    list-style: none;
+  }
+  .nav-cats button {
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 600;
+    font-size: 0.85rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 0.4rem 0.9rem;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .nav-cats button:hover { color: var(--text); background: var(--mid); }
+  .nav-cats button.active { color: var(--yellow); background: rgba(255,209,0,0.08); }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  /* ─── API KEY SETUP ─── */
+  #setup-screen {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(232,0,28,0.08) 0%, transparent 70%);
+  }
+
+  .setup-card {
+    max-width: 520px;
+    width: 100%;
+    text-align: center;
+    animation: fadeUp 0.6s ease both;
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .setup-icon {
+    font-size: 4rem;
+    margin-bottom: 1.5rem;
+    display: block;
+  }
+
+  .setup-card h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 3.5rem;
+    letter-spacing: 0.06em;
+    line-height: 1;
+    margin-bottom: 0.5rem;
+  }
+  .setup-card h1 em {
+    color: var(--red);
+    font-style: normal;
+  }
+
+  .setup-card p {
+    color: var(--muted);
+    font-size: 1rem;
+    line-height: 1.6;
+    margin-bottom: 2.5rem;
+  }
+  .setup-card p a {
+    color: var(--yellow);
+    text-decoration: none;
+  }
+  .setup-card p a:hover { text-decoration: underline; }
+
+  .key-input-wrap {
+    position: relative;
+    margin-bottom: 1rem;
+  }
+  .key-input-wrap input {
+    width: 100%;
+    background: var(--mid);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem 3.5rem 1rem 1.2rem;
+    color: var(--text);
+    font-family: 'Barlow Condensed', monospace;
+    font-size: 1rem;
+    letter-spacing: 0.04em;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .key-input-wrap input:focus {
+    border-color: var(--red);
+    box-shadow: 0 0 0 3px rgba(232,0,28,0.12);
+  }
+  .key-input-wrap input::placeholder { color: var(--muted); }
+  .toggle-vis {
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 1.1rem;
+    padding: 0.2rem;
+  }
+
+  .btn-primary {
+    width: 100%;
+    background: var(--red);
+    border: none;
+    border-radius: 8px;
+    padding: 1rem;
+    color: #fff;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.3rem;
+    letter-spacing: 0.12em;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .btn-primary::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 60%);
+  }
+  .btn-primary:hover { background: #ff1a2e; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(232,0,28,0.35); }
+  .btn-primary:active { transform: translateY(0); }
+
+  .setup-note {
+    margin-top: 1rem;
+    font-size: 0.78rem;
+    color: var(--muted);
+  }
+
+  /* ─── MAIN APP ─── */
+  #app-screen { display: none; }
+
+  /* ─── HERO PLAYER ─── */
+  .hero {
+    padding: 1.5rem 2rem;
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 1.5rem;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  .player-wrap {
+    background: var(--card);
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    position: relative;
+  }
+
+  .player-aspect {
+    position: relative;
+    padding-bottom: 56.25%;
+    background: var(--dark);
+  }
+  .player-aspect iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+  }
+  .player-placeholder {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    color: var(--muted);
+    background: var(--dark);
+  }
+  .player-placeholder .play-icon {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: var(--mid);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+  }
+  .player-placeholder p {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 1.1rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .player-info {
+    padding: 1rem 1.2rem;
+    border-top: 1px solid var(--border);
+  }
+  .player-info h2 {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 1.2rem;
+    line-height: 1.3;
+    margin-bottom: 0.3rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .player-meta {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-size: 0.82rem;
+    color: var(--muted);
+  }
+  .player-meta span { display: flex; align-items: center; gap: 0.3rem; }
+  .badge-live {
+    background: var(--red);
+    color: #fff;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    padding: 2px 8px;
+    border-radius: 3px;
+  }
+
+  /* ─── SIDEBAR QUEUE ─── */
+  .sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+    max-height: calc(56.25vw * 0.72 + 80px);
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+  .sidebar::-webkit-scrollbar { width: 4px; }
+  .sidebar::-webkit-scrollbar-track { background: transparent; }
+  .sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .sidebar-header {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 0.8rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding-bottom: 0.4rem;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+
+  .queue-item {
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
+    cursor: pointer;
+    padding: 0.6rem;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    transition: all 0.18s;
+    flex-shrink: 0;
+  }
+  .queue-item:hover { background: var(--mid); border-color: var(--border); }
+  .queue-item.active { background: rgba(232,0,28,0.07); border-color: rgba(232,0,28,0.3); }
+
+  .queue-thumb {
+    width: 100px;
+    min-width: 100px;
+    aspect-ratio: 16/9;
+    border-radius: 5px;
+    overflow: hidden;
+    background: var(--dark);
+    position: relative;
+  }
+  .queue-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .queue-duration {
+    position: absolute;
+    bottom: 3px;
+    right: 4px;
+    background: rgba(0,0,0,0.85);
+    color: #fff;
+    font-size: 0.67rem;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 600;
+    padding: 1px 5px;
+    border-radius: 2px;
+  }
+
+  .queue-meta h4 {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 600;
+    font-size: 0.88rem;
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    margin-bottom: 0.25rem;
+  }
+  .queue-meta span {
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+
+  /* ─── GRID SECTION ─── */
+  .section {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 2rem 2.5rem;
+  }
+
+  .section-title {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.2rem;
+  }
+  .section-title h3 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.6rem;
+    letter-spacing: 0.06em;
+  }
+  .section-title .accent-line {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to right, var(--border), transparent);
+  }
+  .section-title .count-badge {
+    font-size: 0.75rem;
+    color: var(--muted);
+    font-family: 'Barlow Condensed', sans-serif;
+    letter-spacing: 0.06em;
+  }
+
+  .video-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 1rem;
+  }
+
+  .video-card {
+    background: var(--card);
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.22s;
+    animation: fadeUp 0.4s ease both;
+  }
+  .video-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(232,0,28,0.25);
+    box-shadow: 0 12px 32px rgba(0,0,0,0.5);
+  }
+
+  .card-thumb {
+    position: relative;
+    aspect-ratio: 16/9;
+    overflow: hidden;
+    background: var(--dark);
+  }
+  .card-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s;
+  }
+  .video-card:hover .card-thumb img { transform: scale(1.06); }
+
+  .card-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .video-card:hover .card-overlay { opacity: 1; }
+
+  .play-btn {
+    width: 52px;
+    height: 52px;
+    background: rgba(232,0,28,0.9);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    transform: scale(0.8);
+    transition: transform 0.2s;
+    box-shadow: 0 0 20px rgba(232,0,28,0.4);
+  }
+  .video-card:hover .play-btn { transform: scale(1); }
+
+  .card-dur {
+    position: absolute;
+    bottom: 6px;
+    right: 8px;
+    background: rgba(0,0,0,0.85);
+    color: #fff;
+    font-size: 0.72rem;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 3px;
+  }
+
+  .card-body {
+    padding: 0.8rem;
+  }
+  .card-body h4 {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 0.95rem;
+    line-height: 1.35;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    margin-bottom: 0.4rem;
+  }
+  .card-body .card-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+  .channel-tag {
+    background: var(--mid);
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-family: 'Barlow Condensed', sans-serif;
+    letter-spacing: 0.04em;
+    font-size: 0.72rem;
+    color: var(--yellow);
+    white-space: nowrap;
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* ─── SEARCH BAR ─── */
+  .search-wrap {
+    display: flex;
+    gap: 0.6rem;
+    margin-bottom: 1.5rem;
+  }
+  .search-wrap input {
+    flex: 1;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.65rem 1rem;
+    color: var(--text);
+    font-family: 'Barlow', sans-serif;
+    font-size: 0.95rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .search-wrap input:focus { border-color: var(--red); }
+  .search-wrap input::placeholder { color: var(--muted); }
+
+  .btn-search {
+    background: var(--red);
+    border: none;
+    border-radius: 8px;
+    padding: 0.65rem 1.4rem;
+    color: #fff;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 0.95rem;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    transition: background 0.2s;
+    white-space: nowrap;
+  }
+  .btn-search:hover { background: #ff1a2e; }
+
+  /* ─── TICKER ─── */
+  .ticker-bar {
+    background: var(--red);
+    height: 36px;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    position: relative;
+  }
+  .ticker-label {
+    background: var(--dark);
+    color: var(--yellow);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1rem;
+    letter-spacing: 0.1em;
+    padding: 0 1rem;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    z-index: 1;
+  }
+  .ticker-scroll {
+    display: flex;
+    gap: 3rem;
+    animation: ticker 40s linear infinite;
+    white-space: nowrap;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 600;
+    font-size: 0.85rem;
+    letter-spacing: 0.06em;
+    color: #fff;
+  }
+  @keyframes ticker {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+  .ticker-sep { color: rgba(255,255,255,0.4); }
+
+  /* ─── LOADING ─── */
+  .loading-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 1rem;
+  }
+  .skeleton {
+    background: var(--card);
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+    animation: shimmer 1.5s infinite;
+  }
+  .skeleton-thumb {
+    aspect-ratio: 16/9;
+    background: linear-gradient(90deg, var(--card) 25%, var(--mid) 50%, var(--card) 75%);
+    background-size: 200% 100%;
+    animation: shimmerBg 1.5s infinite;
+  }
+  .skeleton-body { padding: 0.8rem; }
+  .skeleton-line {
+    height: 12px;
+    background: var(--mid);
+    border-radius: 4px;
+    margin-bottom: 8px;
+  }
+  .skeleton-line.short { width: 60%; }
+  @keyframes shimmerBg {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  /* ─── EMPTY STATE ─── */
+  .empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: var(--muted);
+  }
+  .empty-state .icon { font-size: 3rem; margin-bottom: 1rem; }
+  .empty-state h4 {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 1.3rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+    color: var(--text);
+  }
+
+  /* ─── API KEY CHIP in HEADER ─── */
+  .key-chip {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--mid);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.35rem 0.75rem;
+    font-size: 0.78rem;
+    font-family: 'Barlow Condensed', sans-serif;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+  }
+  .key-dot { width: 6px; height: 6px; background: #2dca5a; border-radius: 50%; }
+  .btn-change-key {
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 0.78rem;
+    font-family: 'Barlow Condensed', sans-serif;
+    letter-spacing: 0.04em;
+    padding: 0;
+    text-decoration: underline;
+  }
+  .btn-change-key:hover { color: var(--text); }
+
+  /* ─── RESPONSIVE ─── */
+  @media (max-width: 900px) {
+    .hero { grid-template-columns: 1fr; }
+    .sidebar { max-height: 280px; flex-direction: row; overflow-y: hidden; overflow-x: auto; flex-wrap: nowrap; }
+    .sidebar::-webkit-scrollbar { height: 4px; width: auto; }
+    .queue-item { min-width: 200px; }
+    .nav-cats { display: none; }
+  }
+  @media (max-width: 600px) {
+    header { padding: 0 1rem; }
+    .hero, .section { padding-left: 1rem; padding-right: 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ─────────────── HEADER ─────────────── -->
+<header>
+  <div class="logo">
+    <div class="logo-dot"></div>
+    SPORTS<span>.TV</span>
+  </div>
+  <ul class="nav-cats" id="nav-cats">
+    <li><button class="active" onclick="setCategory('sports', this)">All Sports</button></li>
+    <li><button onclick="setCategory('football highlights', this)">Football</button></li>
+    <li><button onclick="setCategory('basketball NBA highlights', this)">Basketball</button></li>
+    <li><button onclick="setCategory('soccer goals highlights', this)">Soccer</button></li>
+    <li><button onclick="setCategory('tennis match', this)">Tennis</button></li>
+    <li><button onclick="setCategory('cricket highlights', this)">Cricket</button></li>
+    <li><button onclick="setCategory('MMA UFC highlights', this)">MMA</button></li>
+  </ul>
+  <div class="header-right" id="header-right"></div>
+</header>
+
+<!-- ─────────────── SETUP SCREEN ─────────────── -->
+<div id="setup-screen">
+  <div class="setup-card">
+    <span class="setup-icon">🏟️</span>
+    <h1>SPORTS<em>.TV</em></h1>
+    <p>
+      Your personal sports streaming hub powered by YouTube.<br>
+      Enter your <a href="https://console.cloud.google.com/apis/credentials" target="_blank">YouTube Data API v3 key</a> to start watching highlights, live streams, and replays.
+    </p>
+    <div class="key-input-wrap">
+      <input type="password" id="api-key-input" placeholder="AIza... (YouTube Data API v3 key)" autocomplete="off" />
+      <button class="toggle-vis" onclick="toggleVis()">👁</button>
+    </div>
+    <button class="btn-primary" onclick="startApp()">▶ &nbsp;LAUNCH SPORTS.TV</button>
+    <p class="setup-note">Your key is stored only in this browser session — never sent anywhere except YouTube's API.</p>
+  </div>
+</div>
+
+<!-- ─────────────── MAIN APP ─────────────── -->
+<div id="app-screen">
+  <!-- Ticker -->
+  <div class="ticker-bar">
+    <div class="ticker-label">⚡ LIVE</div>
+    <div class="ticker-scroll" id="ticker-scroll">
+      <span>Loading latest sports news...</span>
+      <span class="ticker-sep">●</span>
+      <span>Loading latest sports news...</span>
+      <span class="ticker-sep">●</span>
+    </div>
+  </div>
+
+  <!-- Hero Player + Queue -->
+  <div class="hero">
+    <div class="player-wrap">
+      <div class="player-aspect">
+        <div class="player-placeholder" id="player-placeholder">
+          <div class="play-icon">▶</div>
+          <p>Select a video to play</p>
+        </div>
+        <iframe id="yt-player" src="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="display:none"></iframe>
+      </div>
+      <div class="player-info" id="player-info" style="display:none">
+        <h2 id="player-title">—</h2>
+        <div class="player-meta">
+          <span id="player-channel">—</span>
+          <span id="player-views">—</span>
+          <span id="player-date">—</span>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="sidebar-header" style="margin-bottom:0.6rem">UP NEXT</div>
+      <div class="sidebar" id="sidebar-queue"></div>
+    </div>
+  </div>
+
+  <!-- Main Grid -->
+  <div class="section">
+    <div class="search-wrap">
+      <input type="text" id="search-input" placeholder="Search sports videos… e.g. 'NBA finals 2024'" onkeydown="if(event.key==='Enter')doSearch()" />
+      <button class="btn-search" onclick="doSearch()">🔍 SEARCH</button>
+    </div>
+    <div class="section-title">
+      <h3 id="section-heading">TOP SPORTS</h3>
+      <div class="accent-line"></div>
+      <span class="count-badge" id="results-count"></span>
+    </div>
+    <div id="video-grid-wrap"></div>
+  </div>
+</div>
+
+<script>
+let API_KEY = '';
+let currentVideos = [];
+let currentCategory = 'sports';
+let currentVideoId = null;
+
+// ─── UTILS ───
+function fmt(n) {
+  if (!n) return '';
+  n = parseInt(n);
+  if (n >= 1e9) return (n/1e9).toFixed(1)+'B views';
+  if (n >= 1e6) return (n/1e6).toFixed(1)+'M views';
+  if (n >= 1e3) return (n/1e3).toFixed(0)+'K views';
+  return n+' views';
+}
+function timeAgo(s) {
+  const d = new Date(s), now = new Date();
+  const sec = (now - d) / 1000;
+  if (sec < 3600) return Math.floor(sec/60)+'m ago';
+  if (sec < 86400) return Math.floor(sec/3600)+'h ago';
+  if (sec < 2592000) return Math.floor(sec/86400)+'d ago';
+  if (sec < 31536000) return Math.floor(sec/2592000)+'mo ago';
+  return Math.floor(sec/31536000)+'y ago';
+}
+function parseDur(s) {
+  if (!s) return '';
+  const m = s.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+  if (!m) return '';
+  const h = parseInt(m[1]||0), mn = parseInt(m[2]||0), sc = parseInt(m[3]||0);
+  if (h) return `${h}:${String(mn).padStart(2,'0')}:${String(sc).padStart(2,'0')}`;
+  return `${mn}:${String(sc).padStart(2,'0')}`;
+}
+function toggleVis() {
+  const inp = document.getElementById('api-key-input');
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+}
+
+// ─── START ───
+function startApp() {
+  const key = document.getElementById('api-key-input').value.trim();
+  if (!key) { alert('Please enter your YouTube API key.'); return; }
+  API_KEY = key;
+  document.getElementById('setup-screen').style.display = 'none';
+  document.getElementById('app-screen').style.display = 'block';
+  // Header key chip
+  document.getElementById('header-right').innerHTML = `
+    <div class="key-chip"><div class="key-dot"></div>API Connected <button class="btn-change-key" onclick="changeKey()">change</button></div>`;
+  loadVideos(currentCategory);
+}
+
+function changeKey() {
+  API_KEY = '';
+  document.getElementById('setup-screen').style.display = 'flex';
+  document.getElementById('app-screen').style.display = 'none';
+  document.getElementById('header-right').innerHTML = '';
+}
+
+// ─── YOUTUBE API ───
+async function fetchVideos(query, maxResults=20) {
+  const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&q=${encodeURIComponent(query)}&maxResults=${maxResults}&videoCategoryId=17&order=relevance&key=${API_KEY}`;
+  const r = await fetch(url);
+  if (!r.ok) {
+    const err = await r.json();
+    throw new Error(err.error?.message || 'API error');
+  }
+  const data = await r.json();
+  const ids = data.items.map(i => i.id.videoId).join(',');
+  // Fetch stats + duration
+  const statsUrl = `https://www.googleapis.com/youtube/v3/videos?part=statistics,contentDetails&id=${ids}&key=${API_KEY}`;
+  const sr = await fetch(statsUrl);
+  const statsData = await sr.json();
+  const statsMap = {};
+  (statsData.items||[]).forEach(v => { statsMap[v.id] = v; });
+  return data.items.map(item => {
+    const s = statsMap[item.id.videoId] || {};
+    return {
+      id: item.id.videoId,
+      title: item.snippet.title,
+      channel: item.snippet.channelTitle,
+      published: item.snippet.publishedAt,
+      thumb: item.snippet.thumbnails?.medium?.url || item.snippet.thumbnails?.default?.url,
+      views: s.statistics?.viewCount,
+      duration: parseDur(s.contentDetails?.duration),
+    };
+  });
+}
+
+// ─── LOAD & RENDER ───
+async function loadVideos(query) {
+  showSkeleton();
+  try {
+    const videos = await fetchVideos(query, 24);
+    currentVideos = videos;
+    renderGrid(videos);
+    renderQueue(videos.slice(0, 8));
+    updateTicker(videos);
+    document.getElementById('results-count').textContent = videos.length + ' videos';
+    // Auto-play first
+    if (videos.length) playVideo(videos[0]);
+  } catch(e) {
+    showError(e.message);
+  }
+}
+
+function showSkeleton() {
+  const w = document.getElementById('video-grid-wrap');
+  w.innerHTML = `<div class="loading-grid">${Array(8).fill(`<div class="skeleton"><div class="skeleton-thumb"></div><div class="skeleton-body"><div class="skeleton-line"></div><div class="skeleton-line short"></div></div></div>`).join('')}</div>`;
+}
+
+function showError(msg) {
+  document.getElementById('video-grid-wrap').innerHTML = `
+    <div class="empty-state">
+      <div class="icon">⚠️</div>
+      <h4>API Error</h4>
+      <p>${msg}</p>
+    </div>`;
+}
+
+function renderGrid(videos) {
+  const w = document.getElementById('video-grid-wrap');
+  if (!videos.length) {
+    w.innerHTML = `<div class="empty-state"><div class="icon">🏆</div><h4>No videos found</h4><p>Try a different search term.</p></div>`;
+    return;
+  }
+  w.innerHTML = `<div class="video-grid">${videos.map((v,i) => `
+    <div class="video-card" onclick="playVideo(currentVideos[${i}])" style="animation-delay:${i*0.04}s">
+      <div class="card-thumb">
+        <img src="${v.thumb}" alt="${v.title.replace(/"/g,'')}" loading="lazy" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22320%22 height=%22180%22><rect fill=%22%23141418%22 width=%22320%22 height=%22180%22/></svg>'">
+        <div class="card-overlay"><div class="play-btn">▶</div></div>
+        ${v.duration ? `<div class="card-dur">${v.duration}</div>` : ''}
+      </div>
+      <div class="card-body">
+        <h4>${v.title}</h4>
+        <div class="card-meta">
+          <div class="channel-tag" title="${v.channel}">${v.channel}</div>
+          <span>${v.views ? fmt(v.views) : ''}</span>
+        </div>
+      </div>
+    </div>`).join('')}</div>`;
+}
+
+function renderQueue(videos) {
+  const q = document.getElementById('sidebar-queue');
+  q.innerHTML = videos.map((v,i) => `
+    <div class="queue-item${v.id === currentVideoId ? ' active' : ''}" id="qi-${v.id}" onclick="playVideo(currentVideos[${currentVideos.indexOf(v)}])">
+      <div class="queue-thumb">
+        <img src="${v.thumb}" loading="lazy" onerror="this.src=''">
+        ${v.duration ? `<div class="queue-duration">${v.duration}</div>` : ''}
+      </div>
+      <div class="queue-meta">
+        <h4>${v.title}</h4>
+        <span>${v.channel} · ${timeAgo(v.published)}</span>
+      </div>
+    </div>`).join('');
+}
+
+function updateTicker(videos) {
+  const items = videos.slice(0,10).map(v => `<span>${v.title}</span><span class="ticker-sep">●</span>`).join('');
+  const t = document.getElementById('ticker-scroll');
+  t.innerHTML = items + items; // duplicate for seamless loop
+}
+
+// ─── PLAY ───
+function playVideo(v) {
+  if (!v) return;
+  currentVideoId = v.id;
+  const iframe = document.getElementById('yt-player');
+  const ph = document.getElementById('player-placeholder');
+  iframe.src = `https://www.youtube.com/embed/${v.id}?autoplay=1&rel=0&modestbranding=1`;
+  iframe.style.display = 'block';
+  ph.style.display = 'none';
+  document.getElementById('player-info').style.display = 'block';
+  document.getElementById('player-title').textContent = v.title;
+  document.getElementById('player-channel').textContent = '📺 ' + v.channel;
+  document.getElementById('player-views').textContent = v.views ? fmt(v.views) : '';
+  document.getElementById('player-date').textContent = timeAgo(v.published);
+  // Update queue highlights
+  document.querySelectorAll('.queue-item').forEach(el => el.classList.remove('active'));
+  const qi = document.getElementById('qi-' + v.id);
+  if (qi) { qi.classList.add('active'); qi.scrollIntoView({block:'nearest', behavior:'smooth'}); }
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+
+// ─── CATEGORY ───
+function setCategory(cat, btn) {
+  currentCategory = cat;
+  document.querySelectorAll('.nav-cats button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const headings = {
+    'sports': 'TOP SPORTS',
+    'football highlights': 'FOOTBALL',
+    'basketball NBA highlights': 'BASKETBALL',
+    'soccer goals highlights': 'SOCCER',
+    'tennis match': 'TENNIS',
+    'cricket highlights': 'CRICKET',
+    'MMA UFC highlights': 'MMA / UFC',
+  };
+  document.getElementById('section-heading').textContent = headings[cat] || cat.toUpperCase();
+  loadVideos(cat);
+}
+
+// ─── SEARCH ───
+function doSearch() {
+  const q = document.getElementById('search-input').value.trim();
+  if (!q) return;
+  document.getElementById('section-heading').textContent = 'SEARCH: ' + q.toUpperCase();
+  // Deselect nav
+  document.querySelectorAll('.nav-cats button').forEach(b => b.classList.remove('active'));
+  loadVideos(q);
+}
+
+// ─── ENTER KEY IN SETUP ───
+document.getElementById('api-key-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') startApp();
+});
+</script>
+</body>
+</html>
